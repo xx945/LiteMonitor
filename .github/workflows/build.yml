@@ -1,0 +1,50 @@
+name: Build LiteMonitor
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore LiteMonitor.sln
+
+      - name: Build Release
+        run: dotnet build LiteMonitor.sln --configuration Release --no-restore
+
+      - name: Publish & clean runtimes
+        run: |
+          dotnet publish LiteMonitor.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained false `
+            -o ./publish-output
+
+          # 移动 Windows 依赖文件到根目录
+          if (Test-Path ./publish-output/runtimes/win-x64/native) {
+            Move-Item ./publish-output/runtimes/win-x64/native/* ./publish-output/ -Force
+          }
+
+          # 删除整个 runtimes 文件夹
+          if (Test-Path ./publish-output/runtimes) {
+            Remove-Item ./publish-output/runtimes -Recurse -Force
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiteMonitor-Win64
+          path: ./publish-output/
