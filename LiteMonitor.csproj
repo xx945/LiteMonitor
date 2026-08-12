@@ -19,7 +19,7 @@
 
 
 	<ItemGroup>
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.7-pre723" />
     <PackageReference Include="System.Text.Json" Version="9.0.10" />
   </ItemGroup>
 
@@ -44,7 +44,7 @@
 		<Content Include="resources\LiteMonitor.Updater.exe">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-    <Content Include="使用说明(必读).txt">
+    <Content Include="使用说明(必读).txt" Condition="Exists('使用说明(必读).txt')">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
