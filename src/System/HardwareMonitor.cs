@@ -331,6 +331,15 @@ namespace LiteMonitor.src.SystemServices
                     {
                         await Task.Delay(3000);
 
+                        // ========== Arc‑B390慢传感器修复 - 新增开始 ==========
+                        lock (_lock)
+                        {
+                            //延时3秒后二次重建传感器映射，捕获延迟上线的GPU负载传感器
+                            _sensorMap.Rebuild(_computer, _cfg);
+                            _valueProvider.PreCacheAllSensors(_sensorMap);
+                        }
+                        // ========== Arc‑B390慢传感器修复 - 新增结束 ==========
+
                         lock (_lock)
                         {
                             DisableSensorHistory();
