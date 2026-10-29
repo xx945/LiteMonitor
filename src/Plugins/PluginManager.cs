@@ -361,7 +361,7 @@ namespace LiteMonitor.src.Plugins
                 }
 
                 // [Feature] 全屏时暂停后台请求（游戏/播放器全屏）
-                if (tmpl.Execution.PauseOnFullscreen && FullscreenDetector.IsForegroundFullScreen())
+                if ((inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen) && FullscreenDetector.IsForegroundFullScreen())
                 {
                     newTimer.Interval = 2000; // 全屏期间降低检查频率
                     return;

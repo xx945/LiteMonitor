@@ -235,6 +235,7 @@
     "PluginDevGuide": "Dev Guide",
     "PluginHint": "⚠️Tip: Change name/unit/order in [Monitor Items] page.",
     "PluginNoInstances": "No Plugins",
+    "PauseOnFullscreen": "Pause on Fullscreen",
     "PluginCreateCopy": "Create Copy",
     "PluginDeleteCopy": "Delete Copy",
     "PluginRemoveTarget": "Remove",
