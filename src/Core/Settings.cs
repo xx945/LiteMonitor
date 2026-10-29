@@ -344,6 +344,7 @@ namespace LiteMonitor
         public string TemplateId { get; set; } = "";
         public bool Enabled { get; set; } = false;
         public int CustomInterval { get; set; } = 0; // 自定义刷新频率 (0 = 使用模版默认)
+        public bool? PauseOnFullscreen { get; set; } = null; // 全屏暂停覆盖 (null = 使用模版 JSON 默认)
         
         // 全局参数 (Scope="global")
         public Dictionary<string, string> InputValues { get; set; } = new Dictionary<string, string>();
