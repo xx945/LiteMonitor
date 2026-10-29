@@ -263,7 +263,7 @@ namespace LiteMonitor.src.UI.SettingsPage
                         c.Visible = chk.Checked;
                 }
             };
-            topRow.AddCell(new LiteSettingsItem(tmpl.Meta.Name, chk));
+            topRow.AddCell(new LiteSettingsItemPlugin(tmpl.Meta.Name, chk));
 
             // 刷新频率
             int minInterval = PluginManager.GetMinimumInterval(tmpl);
@@ -280,7 +280,7 @@ namespace LiteMonitor.src.UI.SettingsPage
                 }
             };
             this.RegisterRefresh(() => intervalInput.Inner.Text = PluginManager.GetEffectiveInterval(inst, tmpl).ToString());
-            topRow.AddCell(new LiteSettingsItem(LanguageManager.T("Menu.Refresh"), intervalInput));
+            topRow.AddCell(new LiteSettingsItemPlugin(LanguageManager.T("Menu.Refresh"), intervalInput));
 
             // 全屏暂停
             var pauseChk = new LiteCheck(inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen);
@@ -291,7 +291,7 @@ namespace LiteMonitor.src.UI.SettingsPage
                 }
             };
             this.RegisterRefresh(() => pauseChk.Checked = inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen);
-            topRow.AddCell(new LiteSettingsItem(LanguageManager.T("Menu.PauseOnFullscreen"), pauseChk));
+            topRow.AddCell(new LiteSettingsItemPlugin(LanguageManager.T("Menu.PauseOnFullscreen"), pauseChk));
 
             // Split Inputs
             var globalInputs = tmpl.Inputs.Where(x => x.Scope != "target").ToList();

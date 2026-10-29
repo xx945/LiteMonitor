@@ -250,7 +250,7 @@ namespace LiteMonitor.src.UI.Controls
         public LiteTripleRow()
         {
             Dock = DockStyle.Top;
-            Height = UIUtils.S(40);
+            Height = UIUtils.S(44); // 40 内容 + 上下各 2 边距，避免底边被下一行遮挡
             Margin = new Padding(0);
             Padding = new Padding(0);
             BackColor = Color.White;
@@ -309,6 +309,54 @@ namespace LiteMonitor.src.UI.Controls
         }
     }
 
+    public class LiteSettingsItemPlugin : Panel
+    {
+        public Label Label { get; private set; }
+
+        public LiteSettingsItemPlugin(string text, Control ctrl)
+        {
+            // ★★★ 修改：Height/Margin 缩放
+            this.Height = UIUtils.S(40);
+            this.Margin = UIUtils.S(new Padding(0, 2, 40, 2)); 
+            Label = new Label { 
+                Text = text, AutoSize = true, 
+                Font = new Font("Microsoft YaHei UI", 9F), ForeColor = UIColors.TextMain,
+                TextAlign = ContentAlignment.MiddleLeft 
+            };
+            // ★★★ 修改：Height 缩放
+            if (ctrl is LiteCheck) ctrl.Height = UIUtils.S(22); 
+            this.Controls.Add(Label);
+            this.Controls.Add(ctrl);
+            this.Layout += (s, e) => {
+                int mid = this.Height / 2;
+                int pad = UIUtils.S(8); // 内容离外框留白
+                Label.Location = new Point(pad, mid - Label.Height / 2);
+                ctrl.Location = new Point(this.Width - ctrl.Width - pad, mid - ctrl.Height / 2);
+            };
+            this.Paint += (s, e) => {
+                int w = Math.Max(1, Width - 4);
+                int h = Math.Max(1, Height - 4);
+                var rect = new Rectangle(2, 2, w, h);
+                using (var p = new Pen(Color.FromArgb(211, 211, 211), 1f)) { // 浅色虚线圆角外框
+                    p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    using (var path = RoundedRect(rect, UIUtils.S(6)))
+                        e.Graphics.DrawPath(p, path);
+                }
+            };
+        }
+
+        private static System.Drawing.Drawing2D.GraphicsPath RoundedRect(Rectangle r, int radius)
+        {
+            var path = new System.Drawing.Drawing2D.GraphicsPath();
+            int d = Math.Max(1, Math.Min(radius, Math.Min(r.Width, r.Height)) * 2);
+            path.AddArc(r.X, r.Y, d, d, 180, 90);
+            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+    }
 
     public class LiteCard : Panel
     {
