@@ -241,15 +241,17 @@ namespace LiteMonitor.src.UI.SettingsPage
                 return inst.Enabled;
             };
 
-            var chk = group.AddToggle(this, tmpl.Meta.Name, 
-                getVal, 
-                v => {
-                    if (inst.Enabled != v) {
-                        inst.Enabled = v;
-                        _modifiedInstanceIds.Add(inst.Id);
-                    }
+            // 插件名 / 刷新频率 / 全屏暂停 —— 同一行，4:3:3
+            var topRow = group.AddTriple();
+
+            var chk = new LiteCheck(getVal());
+            chk.CheckedChanged += (s, e) => {
+                if (inst.Enabled != chk.Checked) {
+                    inst.Enabled = chk.Checked;
+                    _modifiedInstanceIds.Add(inst.Id);
                 }
-            );
+            };
+            this.RegisterRefresh(() => chk.Checked = getVal());
             _toggles[inst.Id] = chk;
 
             // Real-time visibility toggle
@@ -261,31 +263,35 @@ namespace LiteMonitor.src.UI.SettingsPage
                         c.Visible = chk.Checked;
                 }
             };
+            topRow.AddCell(new LiteSettingsItem(tmpl.Meta.Name, chk));
 
-            // 3. Refresh Rate
+            // 刷新频率
             int minInterval = PluginManager.GetMinimumInterval(tmpl);
-            group.AddInt(this, "Menu.Refresh", "s", 
-                () => PluginManager.GetEffectiveInterval(inst, tmpl),
-                v => {
-                    int safeValue = Math.Max(v, minInterval);
+            var intervalInput = new LiteNumberInput(
+                PluginManager.GetEffectiveInterval(inst, tmpl).ToString(), "s", "", 60, null);
+            intervalInput.Padding = UIUtils.S(new Padding(0, 5, 0, 1));
+            intervalInput.Inner.TextChanged += (s, e) => {
+                if (int.TryParse(intervalInput.Inner.Text, out int val)) {
+                    int safeValue = Math.Max(val, minInterval);
                     if (inst.CustomInterval != safeValue) {
                         inst.CustomInterval = safeValue;
                         _modifiedInstanceIds.Add(inst.Id);
                     }
-                },
-                60, null
-            );
-
-            // 全屏暂停（实例级覆盖 JSON 中的 pauseOnFullscreen）
-            group.AddToggle(this, "Menu.PauseOnFullscreen",
-                () => inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen,
-                v => {
-                    if (inst.PauseOnFullscreen != v) {
-                        inst.PauseOnFullscreen = v;
-                        _modifiedInstanceIds.Add(inst.Id);
-                    }
                 }
-            );
+            };
+            this.RegisterRefresh(() => intervalInput.Inner.Text = PluginManager.GetEffectiveInterval(inst, tmpl).ToString());
+            topRow.AddCell(new LiteSettingsItem(LanguageManager.T("Menu.Refresh"), intervalInput));
+
+            // 全屏暂停
+            var pauseChk = new LiteCheck(inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen);
+            pauseChk.CheckedChanged += (s, e) => {
+                if (inst.PauseOnFullscreen != pauseChk.Checked) {
+                    inst.PauseOnFullscreen = pauseChk.Checked;
+                    _modifiedInstanceIds.Add(inst.Id);
+                }
+            };
+            this.RegisterRefresh(() => pauseChk.Checked = inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen);
+            topRow.AddCell(new LiteSettingsItem(LanguageManager.T("Menu.PauseOnFullscreen"), pauseChk));
 
             // Split Inputs
             var globalInputs = tmpl.Inputs.Where(x => x.Scope != "target").ToList();

@@ -242,6 +242,43 @@ namespace LiteMonitor.src.UI.Controls
         }
     }
 
+    // 容器比例4:3:3
+    public class LiteTripleRow : Panel
+    {
+        private readonly TableLayoutPanel _grid;
+
+        public LiteTripleRow()
+        {
+            Dock = DockStyle.Top;
+            Height = UIUtils.S(40);
+            Margin = new Padding(0);
+            Padding = new Padding(0);
+            BackColor = Color.White;
+
+            _grid = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 1,
+                BackColor = Color.White,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            _grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40f)); // 插件名 4
+            _grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30f)); // 刷新频率 3
+            _grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30f)); // 全屏暂停 3
+            Controls.Add(_grid);
+        }
+
+        public void AddCell(Control cell)
+        {
+            if (_grid.Controls.Count >= 3) return;
+            cell.Dock = DockStyle.Fill;
+            cell.Margin = UIUtils.S(new Padding(0, 2, 10, 2)); // 覆盖 LiteSettingsItem 默认右侧 40 的边距，保证三等分
+            _grid.Controls.Add(cell);
+        }
+    }
+
     public class LiteSettingsItem : Panel
     {
         public Label Label { get; private set; }

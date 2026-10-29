@@ -221,6 +221,16 @@ namespace LiteMonitor.src.UI.SettingsPage
         // =============================================================
 
         /// <summary>
+        /// Adds a full-width row split into 3 equal-width cells
+        /// </summary>
+        public static LiteTripleRow AddTriple(this LiteSettingsGroup group)
+        {
+            var row = new LiteTripleRow();
+            group.AddFullItem(row); // 横跨两列，占满整行
+            return row;
+        }
+
+        /// <summary>
         /// Adds a specialized Action Row (Label + Control on Right)
         /// </summary>
         public static LiteActionRow AddAction(this LiteSettingsGroup group, string title, Control rightControl)
