@@ -95,6 +95,9 @@ namespace LiteMonitor.src.Plugins
         [JsonPropertyName("interval")]
         public int Interval { get; set; } = 60;
 
+        [JsonPropertyName("pauseOnFullscreen")]
+        public bool PauseOnFullscreen { get; set; } = false;
+
         [JsonPropertyName("min_interval")]
         public int MinInterval { get; set; } = 0; // 可选：限制用户自定义刷新频率的最小值，0 表示不额外限制
 

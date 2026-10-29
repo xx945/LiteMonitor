@@ -276,6 +276,17 @@ namespace LiteMonitor.src.UI.SettingsPage
                 60, null
             );
 
+            // 全屏暂停（实例级覆盖 JSON 中的 pauseOnFullscreen）
+            group.AddToggle(this, LanguageManager.T("Menu.PauseOnFullscreen"),
+                () => inst.PauseOnFullscreen ?? tmpl.Execution.PauseOnFullscreen,
+                v => {
+                    if (inst.PauseOnFullscreen != v) {
+                        inst.PauseOnFullscreen = v;
+                        _modifiedInstanceIds.Add(inst.Id);
+                    }
+                }
+            );
+
             // Split Inputs
             var globalInputs = tmpl.Inputs.Where(x => x.Scope != "target").ToList();
             var targetInputs = tmpl.Inputs.Where(x => x.Scope == "target").ToList();
@@ -464,7 +475,8 @@ namespace LiteMonitor.src.UI.SettingsPage
                 TemplateId = source.TemplateId,
                 Enabled = source.Enabled,
                 InputValues = new Dictionary<string, string>(source.InputValues),
-                CustomInterval = source.CustomInterval
+                CustomInterval = source.CustomInterval,
+                PauseOnFullscreen = source.PauseOnFullscreen
             };
             
             if (source.Targets != null)
