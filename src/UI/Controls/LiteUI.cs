@@ -471,8 +471,49 @@ namespace LiteMonitor.src.UI.Controls
 
     public class NoScrollComboBox : ComboBox
     {
+        private const int WM_LBUTTONDOWN = 0x0201;
+        private const int WM_LBUTTONUP = 0x0202;
+        private const int WM_LBUTTONDBLCLK = 0x0203;
+        private const int WM_KEYDOWN = 0x0100;
+        private const int WM_SYSKEYDOWN = 0x0104;
+        private const int VK_F4 = 0x73;
+        private const int VK_DOWN = 0x28;
+
+        /// <summary>
+        /// 为 true 时不弹出原生下拉列表，改为触发 DropDownRequested
+        /// </summary>
+        public bool SuppressNativeDropDown { get; set; }
+
+        public event EventHandler? DropDownRequested;
+
         protected override void WndProc(ref Message m)
         {
+            if (SuppressNativeDropDown)
+            {
+                // 拦截鼠标左键，避免原生下拉窗口打开及动画造成延迟
+                if (m.Msg == WM_LBUTTONDOWN)
+                {
+                    DropDownRequested?.Invoke(this, EventArgs.Empty);
+                    return;
+                }
+                if (m.Msg == WM_LBUTTONUP || m.Msg == WM_LBUTTONDBLCLK)
+                {
+                    return;
+                }
+
+                // 支持 F4 / Alt+Down 打开
+                if (m.Msg == WM_KEYDOWN || m.Msg == WM_SYSKEYDOWN)
+                {
+                    int key = m.WParam.ToInt32();
+                    bool altDown = (m.Msg == WM_SYSKEYDOWN) || ((ModifierKeys & Keys.Alt) != 0);
+                    if ((key == VK_F4 && !altDown) || key == VK_DOWN)
+                    {
+                        DropDownRequested?.Invoke(this, EventArgs.Empty);
+                        return;
+                    }
+                }
+            }
+
             // WM_MOUSEWHEEL = 0x020A
             if (m.Msg == 0x020A && !this.DroppedDown) return;
             base.WndProc(ref m);
@@ -553,6 +594,248 @@ namespace LiteMonitor.src.UI.Controls
         public string SelectedValue 
         {
             get => (Inner.SelectedItem as LiteComboItem)?.Value ?? "";
+        }
+    }
+
+    /// <summary>
+    /// 多选下拉框：外壳复用 LiteComboBox 样式，弹层以多行高亮表示选中项
+    /// 收起后框内显示以英文逗号分隔的选中值，如 "1,3,7"
+    /// </summary>
+    public class LiteMultiSelectCombo : LiteComboBox
+    {
+        private sealed class RowState
+        {
+            public LiteComboItem Item = null!;
+            public Panel Row = null!;
+            public Label Number = null!;
+            public Label Abbr = null!;
+            public bool Selected;
+        }
+
+        private readonly List<RowState> _rows = new List<RowState>();
+        private readonly FlowLayoutPanel _popupPanel;
+        private readonly ToolStripDropDown _dropDown;
+        private readonly int _rowHeight;
+        private readonly int _rowGap;
+        private DateTime _lastPopupClosed = DateTime.MinValue;
+
+        public event EventHandler? ValueChanged;
+
+        public string EmptyText { get; set; } = "";
+
+        public LiteMultiSelectCombo(IEnumerable<LiteComboItem> options, string emptyText = "")
+        {
+            EmptyText = emptyText ?? "";
+            _rowHeight = UIUtils.S(24);
+            _rowGap = UIUtils.S(2);
+
+            int popupWidth = Math.Max(UIUtils.S(80), this.Width - 2);
+            int popupHeight = UIUtils.S(4);
+
+            _popupPanel = new FlowLayoutPanel
+            {
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoSize = false,
+                AutoScroll = false,
+                BackColor = Color.White,
+                Padding = Padding.Empty,
+                Margin = Padding.Empty,
+                Size = new Size(popupWidth, 0)
+            };
+
+            foreach (var option in options)
+            {
+                AddRow(option, popupWidth);
+                popupHeight += _rowHeight + _rowGap;
+            }
+
+            _popupPanel.Size = new Size(popupWidth, popupHeight);
+
+            var host = new ToolStripControlHost(_popupPanel)
+            {
+                AutoSize = false,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty,
+                Size = _popupPanel.Size
+            };
+
+            _dropDown = new ToolStripDropDown
+            {
+                AutoSize = false,
+                Padding = Padding.Empty,
+                DropShadowEnabled = true,
+                Size = new Size(popupWidth + 2, popupHeight + 2)
+            };
+            _dropDown.Items.Add(host);
+            _dropDown.Closed += (s, e) => _lastPopupClosed = DateTime.UtcNow;
+
+            // 接管下拉：直接拦截原生 ComboBox 的下拉，避免原生下拉动画造成的延迟
+            if (Inner is NoScrollComboBox shell)
+            {
+                shell.SuppressNativeDropDown = true;
+                shell.DropDownRequested += (s, e) => TogglePopup();
+            }
+
+            UpdateShellText();
+        }
+
+        /// <summary>
+        /// 当前选中值，格式为 "1,3,7"；无选中值时为 ""
+        /// </summary>
+        public string Value
+        {
+            get
+            {
+                var selected = new List<int>();
+                foreach (var row in _rows)
+                {
+                    if (!row.Selected) continue;
+                    if (int.TryParse(row.Item.Value, out int day) && day >= 1 && day <= 7 && !selected.Contains(day))
+                    {
+                        selected.Add(day);
+                    }
+                }
+                selected.Sort();
+                return selected.Count == 0 ? "" : string.Join(",", selected);
+            }
+            set
+            {
+                var selected = ParseValue(value);
+                foreach (var row in _rows)
+                {
+                    int.TryParse(row.Item.Value, out int day);
+                    row.Selected = selected.Contains(day);
+                    ApplyRowVisual(row);
+                }
+                UpdateShellText();
+            }
+        }
+
+        private static List<int> ParseValue(string value)
+        {
+            var selected = new List<int>();
+            if (string.IsNullOrWhiteSpace(value)) return selected;
+
+            foreach (var part in value.Split(','))
+            {
+                if (!int.TryParse(part.Trim(), out int day)) continue;
+                if (day < 1 || day > 7) continue;
+                if (!selected.Contains(day)) selected.Add(day);
+            }
+            selected.Sort();
+            return selected;
+        }
+
+        private void AddRow(LiteComboItem option, int width)
+        {
+            var item = option ?? new LiteComboItem { Text = "", Value = "" };
+
+            var row = new Panel
+            {
+                Width = width,
+                Height = _rowHeight,
+                BackColor = Color.White,
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0, 0, 0, _rowGap)
+            };
+
+            var number = new Label
+            {
+                Text = item.Value,
+                Dock = DockStyle.Left,
+                Width = UIUtils.S(30),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = Inner.Font,
+                ForeColor = UIColors.TextSub,
+                BackColor = Color.Transparent,
+                Padding = new Padding(UIUtils.S(8), 0, 0, 0)
+            };
+
+            var abbr = new Label
+            {
+                Text = item.Text,
+                Dock = DockStyle.Right,
+                Width = UIUtils.S(50),
+                TextAlign = ContentAlignment.MiddleRight,
+                Font = Inner.Font,
+                ForeColor = UIColors.TextSub,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 0, UIUtils.S(8), 0)
+            };
+
+            row.Controls.Add(abbr);
+            row.Controls.Add(number);
+
+            var state = new RowState { Item = item, Row = row, Number = number, Abbr = abbr };
+            EventHandler onClick = (s, e) => ToggleRow(state);
+            row.Click += onClick;
+            number.Click += onClick;
+            abbr.Click += onClick;
+
+            _rows.Add(state);
+            _popupPanel.Controls.Add(row);
+            ApplyRowVisual(state);
+        }
+
+        private void ApplyRowVisual(RowState state)
+        {
+            Color back = state.Selected ? SystemColors.Highlight : Color.White;
+            Color fore = state.Selected ? SystemColors.HighlightText : UIColors.TextSub;
+
+            state.Row.BackColor = back;
+            state.Number.ForeColor = fore;
+            state.Abbr.ForeColor = fore;
+        }
+
+        private void ToggleRow(RowState state)
+        {
+            state.Selected = !state.Selected;
+            ApplyRowVisual(state);
+            UpdateShellText();
+            ValueChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void UpdateShellText()
+        {
+            string text = Value;
+            if (string.IsNullOrEmpty(text)) text = EmptyText;
+
+            Inner.BeginUpdate();
+            try
+            {
+                if (Inner.Items.Count == 0) Inner.Items.Add(text);
+                else Inner.Items[0] = text;
+                Inner.SelectedIndex = 0;
+            }
+            finally
+            {
+                Inner.EndUpdate();
+            }
+        }
+
+        private void TogglePopup()
+        {
+            if (_dropDown.Visible)
+            {
+                _dropDown.Close();
+                return;
+            }
+
+            // 弹层刚关闭时不要立即重新打开（用于“再次点击控件关闭弹层”的交互）
+            if ((DateTime.UtcNow - _lastPopupClosed).TotalMilliseconds < 250) return;
+
+            _dropDown.Show(this, new Point(0, Height));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _dropDown?.Dispose();
+                _popupPanel?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
     public class LiteLink : Label

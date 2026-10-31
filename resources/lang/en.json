@@ -236,6 +236,8 @@
     "PluginHint": "⚠️Tip: Change name/unit/order in [Monitor Items] page.",
     "PluginNoInstances": "No Plugins",
     "PauseOnFullscreen": "Pause on Fullscreen",
+    "ScheduleWeekdays": "Scheduled Weekdays",
+    "ScheduleWeekdaysEmpty": "Every day",
     "PluginCreateCopy": "Create Copy",
     "PluginDeleteCopy": "Delete Copy",
     "PluginRemoveTarget": "Remove",
