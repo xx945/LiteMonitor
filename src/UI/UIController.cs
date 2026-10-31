@@ -1,6 +1,7 @@
 using LiteMonitor.src.Core;
 using LiteMonitor.src.SystemServices.InfoService;
 using LiteMonitor.src.SystemServices;
+using LiteMonitor.src.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -20,6 +21,7 @@ namespace LiteMonitor
         private bool _layoutDirty = true;
         private bool _dragging = false;
         private string _lastLayoutSignature = "";
+        private DateTime _lastScheduleDate = DateTime.MinValue;
 
         private List<GroupLayoutInfo> _groups = new();
         private List<Column> _hxColsHorizontal = new();
@@ -185,6 +187,15 @@ namespace LiteMonitor
             {
                 await Task.Run(() => _mon.UpdateAll());
 
+                // [Feature] 定时星期：跨天后重建列表面板，自动隐藏/恢复对应插件监控项
+                if (_lastScheduleDate != DateTime.Today)
+                {
+                    _lastScheduleDate = DateTime.Today;
+                    BuildMetrics();
+                    BuildHorizontalColumns();
+                    _layoutDirty = true;
+                }
+
                 // ① 更新竖屏 items
                 foreach (var g in _groups)
                     foreach (var it in g.Items)
@@ -262,7 +273,7 @@ namespace LiteMonitor
             _groups = new List<GroupLayoutInfo>();
 
             var activeItems = _cfg.MonitorItems
-                .Where(x => x.VisibleInPanel)
+                .Where(x => x.VisibleInPanel && !PluginSchedule.IsPluginItemHidden(x.Key, _cfg))
                 // ★★★ 终极排序逻辑 ★★★
                 // 1. 先按 Group 分组，解决 "分裂问题" (物理聚类)
                 .GroupBy(x => x.UIGroup)
@@ -352,7 +363,8 @@ namespace LiteMonitor
 
             // 1. 筛选
             var query = _cfg.MonitorItems
-                .Where(x => forTaskbar ? x.VisibleInTaskbar : x.VisibleInPanel);
+                .Where(x => (forTaskbar ? x.VisibleInTaskbar : x.VisibleInPanel)
+                            && !PluginSchedule.IsPluginItemHidden(x.Key, _cfg));
 
             // 2. 排序 (优化：先按组聚类，防止新插件跑到末尾)
             bool useTaskbarSort = forTaskbar || _cfg.HorizontalFollowsTaskbar;

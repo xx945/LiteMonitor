@@ -353,6 +353,13 @@ namespace LiteMonitor.src.Plugins
             {
                 if (cts.IsCancellationRequested) return;
 
+                // [Feature] 定时星期：非生效日不刷新，2 秒轻量轮询以便跨天后自动恢复
+                if (!PluginSchedule.IsActiveToday(inst.ScheduleWeekdays))
+                {
+                    newTimer.Interval = 2000;
+                    return;
+                }
+
                 // [Optimization] On-Demand Update: Skip if not visible
                 if (!IsPluginVisible(inst.Id))
                 {

@@ -236,6 +236,8 @@
     "PluginHint": "⚠️说明：如需修改插件的显示名称或排序，请开启插件后前往 [监控项显示] 页面设置",
     "PluginNoInstances": "暂无插件实例",
     "PauseOnFullscreen": "全屏暂停",
+    "ScheduleWeekdays": "定时星期",
+    "ScheduleWeekdaysEmpty": "每天",
     "PluginCreateCopy": "创建副本",
     "PluginDeleteCopy": "删除副本",
     "PluginRemoveTarget": "移除",

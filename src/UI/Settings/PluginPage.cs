@@ -287,6 +287,27 @@ namespace LiteMonitor.src.UI.SettingsPage
                 }
             );
 
+            // 定时星期：下拉多选 1-7（1=周一..7=周日），空=每天
+            group.AddMultiSelect(this, "Menu.ScheduleWeekdays",
+                new[] {
+                    new LiteComboItem { Value = "1", Text = "Mon" },
+                    new LiteComboItem { Value = "2", Text = "Tue" },
+                    new LiteComboItem { Value = "3", Text = "Wed" },
+                    new LiteComboItem { Value = "4", Text = "Thu" },
+                    new LiteComboItem { Value = "5", Text = "Fri" },
+                    new LiteComboItem { Value = "6", Text = "Sat" },
+                    new LiteComboItem { Value = "7", Text = "Sun" }
+                },
+                () => inst.ScheduleWeekdays,
+                v => {
+                    if (inst.ScheduleWeekdays != v) {
+                        inst.ScheduleWeekdays = v;
+                        _modifiedInstanceIds.Add(inst.Id);
+                    }
+                },
+                LanguageManager.T("Menu.ScheduleWeekdaysEmpty")
+            );
+
             // Split Inputs
             var globalInputs = tmpl.Inputs.Where(x => x.Scope != "target").ToList();
             var targetInputs = tmpl.Inputs.Where(x => x.Scope == "target").ToList();
@@ -476,7 +497,8 @@ namespace LiteMonitor.src.UI.SettingsPage
                 Enabled = source.Enabled,
                 InputValues = new Dictionary<string, string>(source.InputValues),
                 CustomInterval = source.CustomInterval,
-                PauseOnFullscreen = source.PauseOnFullscreen
+                PauseOnFullscreen = source.PauseOnFullscreen,
+                ScheduleWeekdays = source.ScheduleWeekdays
             };
             
             if (source.Targets != null)

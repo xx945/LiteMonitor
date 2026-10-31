@@ -198,6 +198,23 @@ namespace LiteMonitor.src.UI.SettingsPage
             return cmb;
         }
 
+        /// <summary>
+        /// Adds a multi-select dropdown with highlighted rows.
+        /// Value is stored as comma-separated item values, e.g. "1,3,7"; empty means nothing selected.
+        /// </summary>
+        public static LiteMultiSelectCombo AddMultiSelect(this LiteSettingsGroup group, SettingsPageBase page, string titleKey, IEnumerable<LiteComboItem> items, Func<string> get, Action<string> set, string emptyText = "")
+        {
+            var cmb = new LiteMultiSelectCombo(items, emptyText);
+            cmb.Value = get();
+
+            // Immediate binding
+            cmb.ValueChanged += (s, e) => set(cmb.Value);
+            page.RegisterRefresh(() => cmb.Value = get());
+
+            group.AddItem(new LiteSettingsItem(LanguageManager.T(titleKey), cmb));
+            return cmb;
+        }
+
         private static void AttachAutoWidth(LiteComboBox cmb)
         {
             cmb.Inner.DropDown += (s, e) =>
