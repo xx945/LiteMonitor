@@ -369,7 +369,8 @@ namespace LiteMonitor.src.SystemServices
                                     // 初始化总容量 (供容量显示模式使用)
                                     if (Settings.DetectedRamTotalGB <= 0)
                                     {
-                                        Settings.DetectedRamTotalGB = memTotal > 512.0f ? memTotal / 1024.0f : memTotal;
+                                        // pre776 起 MEM.Used/MEM.Available 以字节上报
+                                        Settings.DetectedRamTotalGB = memTotal / 1073741824.0f;
                                     }
 
                                     // 计算负载百分比
@@ -395,9 +396,9 @@ namespace LiteMonitor.src.SystemServices
                         float? total = GetValue("GPU.VRAM.Total");
                         if (used.HasValue && total.HasValue && total > 0)
                         {
-                            if (Settings.DetectedGpuVramTotalGB <= 0) Settings.DetectedGpuVramTotalGB = total.Value / 1024f;
-                            if (total > 10485760) { used /= 1048576f; total /= 1048576f; }
-                            result = used / total * 100f;
+                            // pre776 起 GPU 显存传感器以字节上报
+                            if (Settings.DetectedGpuVramTotalGB <= 0) Settings.DetectedGpuVramTotalGB = total.Value / 1073741824.0f;
+                            result = used.Value / total.Value * 100f;
                         }
                         else
                         {
