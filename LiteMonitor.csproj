@@ -19,7 +19,7 @@
 
 
 	<ItemGroup>
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.7-pre776" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.7-pre785" />
   </ItemGroup>
 
     <!-- 自动复制 themes 与 lang 目录下的所有文件 -->
