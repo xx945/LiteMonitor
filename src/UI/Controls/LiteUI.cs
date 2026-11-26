@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using LiteMonitor.src.Core; // 确保引用了 UIUtils
@@ -294,6 +295,7 @@ namespace LiteMonitor.src.UI.Controls
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         private static extern Int32 SendMessage(IntPtr hWnd, int msg, int wParam, [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string lParam);
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Placeholder
         {
             set
@@ -430,6 +432,7 @@ namespace LiteMonitor.src.UI.Controls
     {
         public LiteUnderlineInput Input;
         public LiteColorPicker Picker;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string HexValue { get => Input.Inner.Text; set { Input.Inner.Text = value; Picker.SetHex(value); } }
 
         public LiteColorInput(string initialHex)
@@ -452,6 +455,7 @@ namespace LiteMonitor.src.UI.Controls
     {
         private Color _color;
         public event EventHandler? ColorChanged;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color Value { get => _color; set { _color = value; Invalidate(); } }
         // ★★★ 修改：Size 缩放
         public LiteColorPicker(string initialHex) { SetHex(initialHex); this.Size = new Size(UIUtils.S(24), UIUtils.S(24)); this.Cursor = Cursors.Hand; this.DoubleBuffered = true; this.Click += (s, e) => PickColor(); }
@@ -482,6 +486,7 @@ namespace LiteMonitor.src.UI.Controls
         /// <summary>
         /// 为 true 时不弹出原生下拉列表，改为触发 DropDownRequested
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SuppressNativeDropDown { get; set; }
 
         public event EventHandler? DropDownRequested;
@@ -555,7 +560,9 @@ namespace LiteMonitor.src.UI.Controls
             }; 
         } 
         
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object SelectedItem { get => Inner.SelectedItem; set => Inner.SelectedItem = value; } 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedIndex { get => Inner.SelectedIndex; set => Inner.SelectedIndex = value; } 
         public ComboBox.ObjectCollection Items => Inner.Items; 
         public override string Text { get => Inner.Text; set => Inner.Text = value; } 
@@ -621,6 +628,7 @@ namespace LiteMonitor.src.UI.Controls
 
         public event EventHandler? ValueChanged;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string EmptyText { get; set; } = "";
 
         public LiteMultiSelectCombo(IEnumerable<LiteComboItem> options, string emptyText = "")
@@ -683,6 +691,7 @@ namespace LiteMonitor.src.UI.Controls
         /// <summary>
         /// 当前选中值，格式为 "1,3,7"；无选中值时为 ""
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Value
         {
             get
@@ -865,6 +874,7 @@ namespace LiteMonitor.src.UI.Controls
             if (Enabled) this.ForeColor = normal;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new bool Enabled
         { 
             get => base.Enabled; 
@@ -929,7 +939,7 @@ namespace LiteMonitor.src.UI.Controls
             }
         }
     }
-    public class LiteNavBtn : Button { private bool _isActive; public bool IsActive { get => _isActive; set { _isActive = value; Invalidate(); } } public LiteNavBtn(string text) { Text = "  " + text; Size = new Size(UIUtils.S(150), UIUtils.S(40)); FlatStyle = FlatStyle.Flat; FlatAppearance.BorderSize = 0; TextAlign = ContentAlignment.MiddleLeft; Font = new Font("Microsoft YaHei UI", 10F); Cursor = Cursors.Hand; Margin = UIUtils.S(new Padding(5, 2, 5, 2)); BackColor = UIColors.SidebarBg; ForeColor = UIColors.TextMain; } protected override void OnPaint(PaintEventArgs e) { Color bg = _isActive ? UIColors.NavSelected : (ClientRectangle.Contains(PointToClient(Cursor.Position)) ? UIColors.NavHover : UIColors.SidebarBg); using (var b = new SolidBrush(bg)) e.Graphics.FillRectangle(b, ClientRectangle); if (_isActive) { using (var b = new SolidBrush(UIColors.Primary)) e.Graphics.FillRectangle(b, 0, UIUtils.S(8), UIUtils.S(3), Height - UIUtils.S(16)); Font = new Font(Font, FontStyle.Bold); } else { Font = new Font(Font, FontStyle.Regular); } TextRenderer.DrawText(e.Graphics, Text, Font, new Point(UIUtils.S(12), UIUtils.S(9)), UIColors.TextMain); } protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); Invalidate(); } protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); Invalidate(); } }
+    public class LiteNavBtn : Button { private bool _isActive; [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)] public bool IsActive { get => _isActive; set { _isActive = value; Invalidate(); } } public LiteNavBtn(string text) { Text = "  " + text; Size = new Size(UIUtils.S(150), UIUtils.S(40)); FlatStyle = FlatStyle.Flat; FlatAppearance.BorderSize = 0; TextAlign = ContentAlignment.MiddleLeft; Font = new Font("Microsoft YaHei UI", 10F); Cursor = Cursors.Hand; Margin = UIUtils.S(new Padding(5, 2, 5, 2)); BackColor = UIColors.SidebarBg; ForeColor = UIColors.TextMain; } protected override void OnPaint(PaintEventArgs e) { Color bg = _isActive ? UIColors.NavSelected : (ClientRectangle.Contains(PointToClient(Cursor.Position)) ? UIColors.NavHover : UIColors.SidebarBg); using (var b = new SolidBrush(bg)) e.Graphics.FillRectangle(b, ClientRectangle); if (_isActive) { using (var b = new SolidBrush(UIColors.Primary)) e.Graphics.FillRectangle(b, 0, UIUtils.S(8), UIUtils.S(3), Height - UIUtils.S(16)); Font = new Font(Font, FontStyle.Bold); } else { Font = new Font(Font, FontStyle.Regular); } TextRenderer.DrawText(e.Graphics, Text, Font, new Point(UIUtils.S(12), UIUtils.S(9)), UIColors.TextMain); } protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); Invalidate(); } protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); Invalidate(); } }
     public class LiteSortBtn : Button { public LiteSortBtn(string txt) { Text = txt; Size = new Size(UIUtils.S(24), UIUtils.S(24)); FlatStyle = FlatStyle.Flat; FlatAppearance.BorderSize = 0; BackColor = Color.FromArgb(245, 245, 245); ForeColor = Color.DimGray; Cursor = Cursors.Hand; Font = new Font("Microsoft YaHei UI", 7F, FontStyle.Bold); Margin = new Padding(0); } }
     
     // ★★★ New: Header Button (Variable Width) ★★★

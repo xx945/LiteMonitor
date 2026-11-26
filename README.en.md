@@ -155,8 +155,8 @@ Example:
 
 ### Requirements
 - Windows 10 / 11  
-- .NET 8 SDK  
-- Visual Studio 2022 / JetBrains Rider
+- .NET 10 SDK  
+- Visual Studio 2026 / JetBrains Rider
 
 ### Build
 ```bash
@@ -167,7 +167,7 @@ dotnet build -c Release
 
 Output:
 ```
-/bin/Release/net8.0-windows/LiteMonitor.exe
+/bin/Release/net10.0-windows/LiteMonitor.exe
 ```
 
 ---
