@@ -77,4 +77,14 @@
   <ItemGroup>
     <Folder Include="src\UI\Settings\" />
   </ItemGroup>
+
+  <!-- 发布时移除 DiskInfoToolkit 附带的 de-DE / es-ES 本地化资源（该目录下仅包含此文件） -->
+  <Target Name="RemoveUnneededSatelliteResources" AfterTargets="Publish">
+    <ItemGroup>
+      <_UnneededSatellite Include="$(PublishDir)de-DE\DiskInfoToolkit.resources.dll" />
+      <_UnneededSatellite Include="$(PublishDir)es-ES\DiskInfoToolkit.resources.dll" />
+    </ItemGroup>
+    <Delete Files="@(_UnneededSatellite)" />
+    <RemoveDir Directories="$(PublishDir)de-DE;$(PublishDir)es-ES" />
+  </Target>
 </Project>
