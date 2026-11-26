@@ -43,8 +43,22 @@ jobs:
             Remove-Item ./publish-output/runtimes -Recurse -Force
           }
 
+      - name: Read versions
+        id: versions
+        shell: pwsh
+        run: |
+          [xml]$csproj = Get-Content LiteMonitor.csproj
+          $appVersion = $csproj.SelectSingleNode('//PropertyGroup/Version').InnerText.Trim()
+          $lhmVersion = $csproj.SelectSingleNode("//PackageReference[@Include='LibreHardwareMonitorLib']/@Version").Value.Trim()
+          if (-not $appVersion -or -not $lhmVersion) {
+            throw "无法从 LiteMonitor.csproj 解析版本号 (app='$appVersion', lhm='$lhmVersion')"
+          }
+          "app=$appVersion" >> $env:GITHUB_OUTPUT
+          "lhm=$lhmVersion" >> $env:GITHUB_OUTPUT
+          Write-Host "Artifact name: LiteMonitor-$appVersion-$lhmVersion"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LiteMonitor-Win64
+          name: LiteMonitor-${{ steps.versions.outputs.app }}-${{ steps.versions.outputs.lhm }}
           path: ./publish-output/
